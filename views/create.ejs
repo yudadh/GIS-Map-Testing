@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Outlet</title>
+    <!-- Include Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" href="/css/create.css">
+</head>
+<body>
+    <div id="title">
+        <h1>Create Hospital Data</h1>
+    </div>
+    <div id="map"></div>
+    <form id="hospitalForm">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name"><br>
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email"><br>
+        <span class="error" id="emailError"></span>
+        <label for="phone">Phone:</label><br>
+        <input type="text" id="phone" name="phone"><br>
+        <label for="longitude">Longitude:</label><br>
+        <input type="text" id="longitude" name="longitude" readonly><br>
+        <label for="latitude">Latitude:</label><br>
+        <input type="text" id="latitude" name="latitude" readonly><br>
+        <!-- <label for="regency">Regency:</label><br>
+        <input type="text" id="regency" name="regency"><br> -->
+        <button type="submit" id="submit">Create</button>
+    </form>
+
+    <!-- Include Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Include Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    <script src="/js/create.js"></script>
+</body>
+</html>

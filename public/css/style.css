@@ -4,21 +4,25 @@ body {
   background-color: #222831;
   font-family: Arial, Helvetica, sans-serif;
 }
+
 #map {
-  height: 60vh;
+  min-height: 65vh;
   width: 95vw;
   margin: 2rem;
+  border-radius: 5px;
   position: relative;
 }
+
 main {
   width: 100vw;
-  margin: 1rem 0.5rem;
 }
+
 .map-container {
   display: flex;
   justify-content: space-arround;
   align-items: center;
 }
+
 #display-box {
   height: 55vh;
   width: 25vw;
@@ -27,22 +31,62 @@ main {
   color: #eeeeee;
   background-color: #31363f;
 }
+
 #display-box h2 {
   text-align: center;
 }
+
 #display-box table {
   font-size: large;
 }
+
 header h1 {
   color: white;
   text-align: center;
 }
+
+#add-button{
+  display: flex;
+  justify-content:space-around;
+  align-items: center;
+  background-color: #31363f;
+  border-radius: 5px;
+  width: 95vw;
+  margin: 2rem;
+}
+
+#add-button p {
+  color: #fff;
+}
+
+table {
+  width: 95vw;
+  border-collapse: collapse;
+  margin: 2rem;
+  color: #fff;
+}
+
+th, td {
+  border: 1px solid #31363e;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #31363f;
+}
+
 .button {
-  position: absolute;
-  z-index: 999;
-  bottom: 10px;
-  right: 83%;
-  padding: 10px;
+  display: inline;
+  width: 10%;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 .btn {
   background-color: #31363f;
@@ -96,6 +140,26 @@ footer {
   margin-bottom: 8px; 
 }
 
+.edit-button {
+  background-color: #4CAF50; /* Green */
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.delete-button {
+  background-color: #f44336; /* Red */
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.edit-button:hover, .delete-button:hover {
+  opacity: 0.8;
+}
 /* .custom-popup .close-button {
   position: absolute; 
   top: 5px; 

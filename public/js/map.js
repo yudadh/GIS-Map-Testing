@@ -1,22 +1,6 @@
-document.addEventListener("DOMContentLoaded", async function () {
-  // popup box html
-  //   const popupBox = (lat, long, index) => {
-  //     return ` <div class="text-slate-900 dark:text-white">
-  //               <table>
-  //                 <tr>
-  //                   <td>Latitude</td><td>:</td><td>${lat}</td>
-  //                 </tr>
-  //                 <tr>
-  //                   <td>Latitude</td><td>:</td><td>${long}</td>
-  //                 </tr>
-  //                 <tr>
-  //                   <td>MarkerNum</td><td>:</td><td>${index + 1}</td>
-  //                 </tr>
 
-  //               </table>
-  //               </div>
-  //               `;
-  //   };
+document.addEventListener("DOMContentLoaded", async function () {
+  
   // map koordinat
   let map = L.map("map").setView([-8.4095188, 115.188919], 11);
   // menambahkan tilelayer
@@ -25,14 +9,34 @@ document.addEventListener("DOMContentLoaded", async function () {
     attribution:
       '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
-  const myIcon = L.icon({
-    iconUrl: "/assets/location-pin.png",
-    iconSize: [40, 40],
-  });
-  // marker
-  async function getMarkers() {
+  
+
+  function isTokenExpired(token) {
+    if (!token) return true;
+  
+    const { exp } = jwt_decode(token);
+    if (Date.now() >= exp * 1000) {
+      return true;
+    }
+    return false;
+  }
+  
+  // get data from api
+  const url = "http://127.0.0.1:8000/api"
+  async function getHospitals() {
     try {
-      const res = await axios.get("/markers");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found in local storage");
+      }
+      if (isTokenExpired(token)){
+        window.location.href = '/login'
+      }
+      const res = await axios.get(url + "/hospitals", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       return res.data;
     } catch (error) {
       console.log(error);
@@ -40,161 +44,120 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 
-  try {
-    const getMarkerData = await getMarkers();
-    if (getMarkerData && getMarkerData.data) {
-      const markerArray = getMarkerData.data;
-      markerArray.forEach((marker) => {
-        const mark = L.marker([marker.longitude, marker.latitude]).addTo(map);
-        // Create a div element for the custom popup content
-        var popupContent = document.createElement("div");
-        popupContent.classList.add("custom-popup");
 
-        const markerContent = document.createElement("div");
-        markerContent.innerHTML = `
-                  <h2>Marker Details</h2>
-                  <p>Name: ${marker.name}</p>
-                  <p>Latitude: ${marker.latitude}</p>
-                  <p>Longitude: ${marker.longitude}</p>
-                  <p>Regency: ${marker.regency}</p>
-                  <!-- Add more details as needed -->
-                  `;
-        // <span class="close-button" onclick="closePopup()">Close</span>
-        popupContent.appendChild(markerContent);
-        mark.bindPopup(popupContent);
-        mark.on("click", function () {
-          mark.openPopup();
-        });
+  try {
+    const hospitals = await getHospitals();
+    if (hospitals && Array.isArray(hospitals)) {
+      hospitals.forEach((hospital) => {
+        if (hospital.latitude && hospital.longitude) {
+          var myIcon = L.icon({
+            iconUrl: "/assets/hospital.png",
+            iconSize: [40, 40],
+          })
+          const mark = L.marker([parseFloat(hospital.latitude), parseFloat(hospital.longitude)], {icon:myIcon}).addTo(map);
+          // Create a div element for the custom popup content
+          var popupContent = document.createElement("div");
+          popupContent.classList.add("custom-popup");
+
+          const markerContent = document.createElement("div");
+          markerContent.innerHTML = `
+            <h2>Marker Details</h2>
+            <p>Name: ${hospital.name}</p>
+            <p>Email: ${hospital.email}</p>
+            <p>Phone: ${hospital.phone}</p>
+            <p>Latitude: ${hospital.latitude}</p>
+            <p>Longitude: ${hospital.longitude}</p>
+            <p>Regency: ${hospital.regency || 'N/A'}</p>
+          `;
+
+          popupContent.appendChild(markerContent);
+          mark.bindPopup(popupContent);
+          mark.on("click", function () {
+            mark.openPopup();
+          });
+        } else {
+          console.error("Invalid marker coordinates:", hospital);
+        }
       });
     } else {
-      console.error("Invalid marker data received:", getMarkerData);
+      console.error("Invalid marker data received:", hospitals);
     }
-  } catch (error) {
+  }catch (error) {
     console.error("Error fetching marker data:", error);
   }
 
-  // let marker = L.marker([-8.4095188, 115.188919], {
-  //   icon: myIcon,
-  // }).addTo(map);
-  // circle
-  // let circle = L.circle([-8.654956, 115.205618], {
-  //   color: "red",
-  //   fillcolor: "#00000",
-  //   fillopacity: 0.5,
-  //   radius: 1000,
-  // }).addTo(map);
-  // let markers = [];
-  // let markerClusters = L.markerClusterGroup().addTo(map);
-  // addMarker = function (latlng, index) {
-  //   // menambahkan marker
-  //   let myMarker = L.marker(latlng, {
-  //     icon: myIcon,
-  //     draggable: true,
-  //   }).addTo(map);
 
-  //   let thisPopup = L.popup();
-  //   myMarker.bindPopup(thisPopup);
+  try {
+    const hospitals = await getHospitals();
+    console.log(hospitals)
+    if (!hospitals) {
+      return;
+    }
+  
+    const tableBody = document.querySelector("#hospital-table tbody");
+    hospitals.forEach((hospital, index) => {
+      const row = document.createElement("tr");
+      row.appendChild(createCell(index + 1)); // Row number
+      row.appendChild(createCell(hospital.name));
+      row.appendChild(createCell(hospital.email));
+      row.appendChild(createCell(hospital.phone));
+      row.appendChild(createCell(hospital.latitude));
+      row.appendChild(createCell(hospital.longitude));
+  
+      const actionCell = document.createElement("td");
+      const editButton = document.createElement("button");
+      editButton.textContent = "Edit";
+      editButton.className = "edit-button"
+      editButton.onclick = () => {
+        const editUrl = `/edit-hospital?id=${hospital.id}`; 
+        window.location.href = editUrl;
+      };
 
-  //   myMarker.on("click", function () {
-  //     thisPopup.setLatLng(myMarker.getLatLng());
-  //     thisPopup.setContent(`
-  //     <table>
-  //       <tr>
-  //         <td>Latitude</td><td>:</td><td>${myMarker.getLatLng().lat}</td>
-  //       </tr>
-  //       <tr>
-  //         <td>Latitude</td><td>:</td><td>${myMarker.getLatLng().lng}</td>
-  //       </tr>
-  //       <tr>
-  //         <td>MarkerNum</td><td>:</td><td>${index + 1}</td>
-  //       </tr>
-  //     </table>
-  //     `);
-  //     //   thisPopup.setContent(
-  //     //     popupBox(myMarker.getLatLng().lat, myMarker.getLatLng().lng, index)
-  //     //   );
-  //     thisPopup.addTo(map);
-  //   });
-  //   // delete marker
-  //   myMarker.on("contextmenu", function (e) {
-  //     markers.forEach((marker, index) => {
-  //       if (myMarker == marker) {
-  //         myMarker.removeFrom(map);
-  //         markers.splice(index, 1);
-  //       }
-  //     });
-  //   });
-  //   // console.log(markers);
-  //   return myMarker;
-  // };
-  // // add marker
-  // map.on("click", function (e) {
-  //   // console.log(e);
-  //   let newMarker = addMarker(e.latlng, markers.length);
-  //   markers.push(newMarker);
-  //   markerClusters.addLayer(L.layerGroup(markers));
-  // });
-  // var btnKirim = document.getElementById("btnKirim");
-  // btnKirim.addEventListener("click", function () {
-  //   // Ambil koordinat masing-masing marker dan simpan ke dalam array koordinat
-  //   var koordinat = markers.map(function (marker) {
-  //     return [marker.getLatLng().lat, marker.getLatLng().lng];
-  //   });
-  //   // console.log(JSON.stringify(koordinat));
-  //   // Kirim data ke server dalam format JSON menggunakan method fetch()
-  //   fetch("/simpan", {
-  //     method: "POST",
-  //     body: JSON.stringify(koordinat),
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   })
-  //     .then(function (response) {
-  //       return response;
-  //     })
-  //     .then(function (data) {
-  //       console.log(data);
-  //     })
-  //     .catch(function (error) {
-  //       console.log(error);
-  //     });
-  // });
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = "Delete";
+      deleteButton.className = "delete-button"
+      deleteButton.onclick = () => deleteHospital(hospital.id);
 
-  // fetch("/baca")
-  //   .then(function (response) {
-  //     // return response.text();
-  //     return response.json();
-  //   })
-  //   .then(function (data) {
-  //     var latlangs = [];
-  //     data.forEach(function (c, i) {
-  //       let latlng = L.latLng(c[0], c[1]);
-  //       latlangs.push(latlng);
-  //       var newMarker = addMarker(latlng, markers.length);
-  //       markers.push(newMarker);
-  //     });
+      actionCell.appendChild(editButton);
+      actionCell.appendChild(deleteButton);
+      row.appendChild(actionCell);
+  
+      tableBody.appendChild(row);
+    
+    });
+  } catch (error) {
+    console.log(error)
+  }
 
-  //     // Tambahkan ke markercluster
-  //     markerClusters.addLayer(L.layerGroup(markers));
-  //   })
-  //   .catch(function (error) {
-  //     console.log(error);
-  //   });
+  function createCell(text) {
+    const cell = document.createElement("td");
+    cell.textContent = text;
+    return cell;
+  }
+  
+  // Delete button functionality
+  function deleteHospital(id) {
+    const token = localStorage.getItem("token");
+    axios.delete('http://127.0.0.1:8000/api/hospitals/' + id, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then((response) => {
+      console.log(response)
+      alert("Data Deleted Successfully")
+      window.location.href = '/map'
+    })
+    // Add your delete functionality here
+  }
 
-  // const btnHapus = document.getElementById("btnHapus");
-  // btnHapus.addEventListener("click", function () {
-  //   fetch("/hapus", {
-  //     method: "DELETE",
-  //   })
-  //     .then(function (res) {
-  //       return res.json();
-  //     })
-  //     .then((data) => {
-  //       alert(data.message);
-  //       window.location.reload();
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //     });
-  // });
-});
+  const buttonAddData = document.getElementById('create-data');
+
+  buttonAddData.addEventListener('click', (e) => {
+    window.location.href = '/create'
+  })
+
+  /// Call populateTable when the page loads
+  // window.onload = populateTable;
+  
+})
